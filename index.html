@@ -40,6 +40,7 @@ async function run(){
       ts: new Date().toISOString()
     };
     try{
+      alert("準備送出請求");
       const r = await fetch(WEBHOOK, {
         method: "POST",
         body: "ping=" + Date.now()//headers: {"Content-Type":"application/json"},
