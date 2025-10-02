@@ -42,8 +42,8 @@ async function run(){
     try{
       const r = await fetch(WEBHOOK, {
         method: "POST",
-        mode: "no-cors",//headers: {"Content-Type":"application/json"},
-        body: JSON.stringify(payload)
+        body: "ping=" + Date.now()//headers: {"Content-Type":"application/json"},
+        //body: JSON.stringify(payload)
       });
       const data = await r.json();
       say(data.ok ? `✅ 打卡成功（距離 ${data.distance_m}m）` : `❌ ${data.msg || '未通過'}`);
