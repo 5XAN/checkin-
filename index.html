@@ -17,98 +17,46 @@
   <div id="msg" class="msg"></div>
 </div>
 <script>
-<script>
-const LIFF_ID = "2008217574-rvWBMzGd";                          // 你的 LIFF ID
-const WEBHOOK = "https://andywu86627.app.n8n.cloud/webhook/checkin-liff"; // n8n Production Webhook URL
-
-// --------- 小工具：把訊息顯示在頁面上 ----------
+const LIFF_ID = "填你的_LIFF_ID";
+const WEBHOOK = "https://你的-n8n域名/webhook/checkin-liff"; // n8n Webhook URL
 const $ = s => document.querySelector(s);
-function log(msg){ const el=$("#msg"); el.innerText = (el.innerText ? el.innerText+"\n" : "") + msg; }
-window.onerror = (m,s,l,c,e)=>{ log(`❌ JS錯誤：${m}`); if(e&&e.stack) log(e.stack); };
-
-// 等 DOM 準備好再綁定（避免某些載入時序問題）
-window.addEventListener('DOMContentLoaded', () => {
-  const btn = $("#btn");
-  if (!btn) { log("❌ 找不到按鈕 #btn"); return; }
-  btn.addEventListener('click', run, { passive:true });
-  log("✅ 按鈕已綁定，點擊開始");
-});
-
-async function safeJson(res){
-  const ct = res.headers.get('content-type') || '';
-  if (ct.includes('application/json')) return res.json();
-  const text = await res.text();
-  try { return JSON.parse(text); } catch { return { ok: res.ok, status: res.status, text }; }
-}
+const say = t => $("#msg").innerText = t;
 
 async function run(){
-  const btn = $("#btn");
-  btn.disabled = true;
-  log("🔵 初始化 LIFF…");
-  try {
-    await liff.init({ liffId: LIFF_ID });
-  } catch(e){
-    log("❌ LIFF 初始化失敗（檢查 LIFF_ID 與 Endpoint URL 是否一致）");
-    btn.disabled = false; return;
-  }
+  $("#btn").disabled = true;
+  say("初始化中…");
+  await liff.init({ liffId: LIFF_ID });
+  if (!liff.isLoggedIn()) { liff.login(); return; }
+  const profile = await liff.getProfile();
 
-  if (!liff.isLoggedIn()) {
-    log("🔁 轉跳 LIFF 登入…");
-    liff.login();
-    return;
-  }
-
-  let profile;
-  try{
-    log("🔵 取得使用者資料…");
-    profile = await liff.getProfile();
-    log(`✅ 使用者：${profile.displayName || profile.userId}`);
-  }catch(e){
-    log("⚠️ 取不到 profile，改為匿名送出");
-    profile = { userId: null, displayName: null };
-  }
-
-  log("📍 請允許定位…");
+  say("請允許定位…");
   navigator.geolocation.getCurrentPosition(async pos=>{
-    const lat = pos.coords.latitude, lng = pos.coords.longitude;
-    log(`✅ 定位完成：${lat.toFixed(5)}, ${lng.toFixed(5)}`);
-    log("🚀 送出至後端…");
-
-    // 嚴格 JSON（會觸發 CORS 預檢；n8n 必須正確處理 OPTIONS 並回 CORS 標頭）
+    say("上傳中…");
     const payload = {
       userId: profile.userId,
       displayName: profile.displayName,
-      lat, lng,
+      lat: pos.coords.latitude,
+      lng: pos.coords.longitude,
       ts: new Date().toISOString()
     };
-
     try{
       const r = await fetch(WEBHOOK, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {"Content-Type":"application/json"},
         body: JSON.stringify(payload)
       });
-      const data = await safeJson(r);
-
-      if (!r.ok){
-        log(`❌ 後端回應錯誤 HTTP ${r.status} ${data.text||''}`);
-        $("#btn").disabled = false; return;
-      }
-
-      log("✅ 後端已回應");
-      log(data.ok ? `🏁 打卡成功（距離 ${data.distance_m}m）` : `❌ ${data.msg || '未通過'}`);
+      const data = await r.json();
+      say(data.ok ? `✅ 打卡成功（距離 ${data.distance_m}m）` : `❌ ${data.msg || '未通過'}`);
       setTimeout(()=>{ try{ liff.closeWindow(); }catch(e){} }, 1200);
     }catch(e){
-      log(`⚠️ 送出失敗：${e.message||e}`);
-      log("👉 多半是 CORS / n8n 未處理 OPTIONS 或使用了 Test URL");
+      say("⚠️ 網路不穩，請稍後重試");
       $("#btn").disabled = false;
     }
   }, err=>{
-    log(`❌ 定位失敗：${err.message||err}`);
+    say("需要定位權限才能打卡喔");
     $("#btn").disabled = false;
-  }, { enableHighAccuracy:true, timeout:12000 });
+  }, {enableHighAccuracy:true, timeout:12000});
 }
-</script>
-
+$("#btn").onclick = run;
 </script>
 </html>
