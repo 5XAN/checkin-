@@ -41,10 +41,18 @@ async function run(){
     };
     try{
       const r = await fetch(WEBHOOK, {
-        method: "POST",
-        headers: {"Content-Type":"application/json"},
-        body: JSON.stringify(payload)
-      });
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    userId: profile.userId,
+    displayName: profile.displayName,
+    lat: pos.coords.latitude,
+    lng: pos.coords.longitude,
+    ts: new Date().toISOString()
+  })
+});
+const data = await r.json();
+
       const data = await r.json();
       say(data.ok ? `✅ 打卡成功（距離 ${data.distance_m}m）` : `❌ ${data.msg || '未通過'}`);
       setTimeout(()=>{ try{ liff.closeWindow(); }catch(e){} }, 1200);
