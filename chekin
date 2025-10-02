@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-Hant">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>打卡報到</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto;margin:0;padding:24px}
+  .wrap{max-width:420px;margin:0 auto;text-align:center}
+  button{width:100%;font-size:18px;padding:14px 16px;border:0;border-radius:12px}
+  .primary{background:#06C755;color:#fff}
+  .msg{margin-top:14px;line-height:1.6}
+</style>
+<div class="wrap">
+  <h2>打卡報到</h2>
+  <p>按下方按鈕，允許定位後將自動完成打卡。</p>
+  <button id="btn" class="primary">同意並打卡</button>
+  <div id="msg" class="msg"></div>
+</div>
+<script>
+const LIFF_ID = "填你的_LIFF_ID";
+const WEBHOOK = "https://你的-n8n域名/webhook/checkin-liff"; // n8n Webhook URL
+const $ = s => document.querySelector(s);
+const say = t => $("#msg").innerText = t;
+
+async function run(){
+  $("#btn").disabled = true;
+  say("初始化中…");
+  await liff.init({ liffId: LIFF_ID });
+  if (!liff.isLoggedIn()) { liff.login(); return; }
+  const profile = await liff.getProfile();
+
+  say("請允許定位…");
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    say("上傳中…");
+    const payload = {
+      userId: profile.userId,
+      displayName: profile.displayName,
+      lat: pos.coords.latitude,
+      lng: pos.coords.longitude,
+      ts: new Date().toISOString()
+    };
+    try{
+      const r = await fetch(WEBHOOK, {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify(payload)
+      });
+      const data = await r.json();
+      say(data.ok ? `✅ 打卡成功（距離 ${data.distance_m}m）` : `❌ ${data.msg || '未通過'}`);
+      setTimeout(()=>{ try{ liff.closeWindow(); }catch(e){} }, 1200);
+    }catch(e){
+      say("⚠️ 網路不穩，請稍後重試");
+      $("#btn").disabled = false;
+    }
+  }, err=>{
+    say("需要定位權限才能打卡喔");
+    $("#btn").disabled = false;
+  }, {enableHighAccuracy:true, timeout:12000});
+}
+$("#btn").onclick = run;
+</script>
+</html>
