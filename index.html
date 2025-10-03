@@ -47,7 +47,7 @@ async function run(){
       });
       const data = await r.json();
       say(data.ok ? `✅ 打卡成功（距離 ${data.distance_m}m）` : `❌ ${data.msg || '未通過'}`);
-      setTimeout(()=>{ try{ liff.closeWindow(); }catch(e){} }, 1200);
+      setTimeout(()=>{ try{ liff.closeWindow(); }catch(e){} }, 5000);
     }catch(e){
       say("⚠️ 網路不穩，請稍後重試");
       $("#btn").disabled = false;
