@@ -28,8 +28,8 @@
   <p>請選擇打卡類型，系統將自動擷取定位。</p>
   
   <div class="btn-group">
-    <button id="btnIn" class="btn-in">上班打卡</button>
-    <button id="btnOut" class="btn-out">下班打卡</button>
+    <button id="btnIn" class="btn-in">志工簽到</button>
+    <button id="btnOut" class="btn-out">志工簽退</button>
   </div>
   
   <div id="msg" class="msg"></div>
@@ -52,7 +52,7 @@ const toggleBtns = (disabled) => {
 async function run(type) {
   // 1. 鎖定按鈕並顯示訊息
   toggleBtns(true);
-  const typeText = type === 'CLOCK_IN' ? '上班' : '下班';
+  const typeText = type === 'CLOCK_IN' ? '簽到' : '簽退';
   say(`準備進行${typeText}打卡...`);
 
   try {
