@@ -228,30 +228,38 @@
             // 4. 判斷 n8n 回傳結果
             if (data.status === 'success' || data.ok === true) {
               
+              // 根據回傳的 type 決定彈窗顏色和圖示 (後端回傳 type: CLOCK_IN 或 CLOCK_OUT)
+              // 如果後端沒回傳，就用前端原本的 type 變數
+              const actionType = data.type || type; 
+              const isCheckIn = actionType === 'CLOCK_IN';
+              
+              // 設定彈窗樣式
+              const titleText = isCheckIn ? '簽到成功！' : '簽退成功！';
+              const popupIcon = isCheckIn ? 'success' : 'success'; // 也可以換成 'info'
+              const confirmColor = isCheckIn ? '#2ecc71' : '#f39c12'; // 綠色 vs 橘色
+
               // 嘗試發送 LINE 聊天室訊息
-              // 即使這裡失敗，也應該算打卡成功 (因為資料已經進 Google Sheets)
               let notifyMsg = "";
               try {
                 if (liff.isInClient()) {
                   await liff.sendMessages([{
                     type: 'text',
-                    text: data.msg || `${typeText}完成！`
+                    text: data.msg || `${titleText}`
                   }]);
-                } else {
-                  notifyMsg = "(請注意：外部瀏覽器無法發送聊天通知)";
                 }
               } catch (msgErr) {
-                console.warn("發送訊息失敗，可能是權限問題", msgErr);
-                notifyMsg = "(訊息發送失敗，但打卡紀錄已保存)";
+                console.warn("發送訊息失敗", msgErr);
               }
 
-              // 顯示漂亮成功彈窗
+              // 顯示差異化的漂亮彈窗
               await Swal.fire({
-                icon: 'success',
-                title: `${typeText}成功`,
-                text: `${data.msg || ''} ${notifyMsg}`,
-                confirmButtonColor: '#2ecc71',
-                confirmButtonText: '關閉視窗'
+                icon: popupIcon,
+                title: titleText,
+                // 直接顯示 n8n 傳回來的客製化 msg (早安 vs 辛苦了)
+                // 這裡用 replace 把換行符號 \n 轉成 HTML 的 <br> 讓排版更漂亮
+                html: (data.msg || '').replace(/\n/g, '<br>'), 
+                confirmButtonColor: confirmColor,
+                confirmButtonText: '關閉'
               });
 
               liff.closeWindow();
