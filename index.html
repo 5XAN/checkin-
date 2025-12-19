@@ -1,3 +1,41 @@
+<!doctype html>
+<html lang="zh-Hant">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>打卡系統</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  body { font-family: system-ui, -apple-system, Segoe UI, Roboto; margin: 0; padding: 24px; background-color: #f8f9fa; }
+  .wrap { max-width: 420px; margin: 0 auto; text-align: center; background: white; padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  h2 { margin-top: 0; color: #333; }
+  p { color: #666; font-size: 14px; margin-bottom: 24px; }
+  
+  /* 按鈕容器：讓按鈕並排 */
+  .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  
+  button { width: 100%; font-size: 16px; padding: 14px 0; border: 0; border-radius: 12px; cursor: pointer; transition: opacity 0.2s; font-weight: bold; color: #fff; }
+  button:active { opacity: 0.8; }
+  button:disabled { background: #ccc !important; cursor: not-allowed; }
+
+  /* 不同顏色的按鈕 */
+  .btn-in { background: #06C755; } /* LINE 綠 */
+  .btn-out { background: #ff9800; } /* 橘色 */
+
+  .msg { margin-top: 20px; line-height: 1.6; font-size: 15px; min-height: 24px; }
+</style>
+
+<div class="wrap">
+  <h2>打卡</h2>
+  <p>請選擇打卡類型，系統將自動擷取定位。</p>
+  
+  <div class="btn-group">
+    <button id="btnIn" class="btn-in">志工簽到</button>
+    <button id="btnOut" class="btn-out">志工簽退</button>
+  </div>
+  
+  <div id="msg" class="msg"></div>
+</div>
+
+<script>
 // 設定區
 const LIFF_ID = "2008226975-vWnrprZr";
 const WEBHOOK = "https://andywu86627.app.n8n.cloud/webhook/cb884b1c-d8a2-4fd6-bb32-ce3e1278b99c";
@@ -52,7 +90,7 @@ async function run(type) {
         // ⚠️ 這裡要配合 n8n 回傳的格式，假設 n8n 回傳 { status: "success", msg: "..." }
         const data = await r.json();
         
-        // ---  改成liff網頁回傳打卡結果 ---
+        // --- 🔥 關鍵修改開始 🔥 ---
         if (data.status === 'success' || data.ok === true) {
           say(`✅ ${typeText}成功！正在發送通知...`);
 
@@ -81,7 +119,7 @@ async function run(type) {
           say(`❌ ${data.msg || '打卡失敗'}`);
           toggleBtns(false); 
         }
-        // ---  修改結束  ---
+        // --- 🔥 關鍵修改結束 🔥 ---
 
       } catch (e) {
         console.error(e);
@@ -104,3 +142,9 @@ async function run(type) {
 // 綁定點擊事件
 $("#btnIn").onclick = () => run('CLOCK_IN');
 $("#btnOut").onclick = () => run('CLOCK_OUT');
+
+// 綁定點擊事件
+$("#btnIn").onclick = () => run('CLOCK_IN');
+$("#btnOut").onclick = () => run('CLOCK_OUT');
+</script>
+</html>
