@@ -26,22 +26,19 @@
       min-height: 100vh;
       margin: 0;
       color: #333;
-      /* 防止背景被彈窗撐開 */
       overflow: hidden; 
     }
 
     .card {
       background: white;
-      width: 85%; /* 改成百分比，適應各種手機 */
-      max-width: 360px; /* 稍微縮小最大寬度 */
+      width: 85%;
+      max-width: 360px;
       padding: 25px 20px;
       border-radius: 20px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.05);
       text-align: center;
-      transition: transform 0.3s;
     }
 
-    /* ... 中間的按鈕樣式保持不變 ... */
     .header-icon {
       font-size: 48px;
       color: var(--primary-color);
@@ -53,6 +50,7 @@
       border-radius: 50%;
       display: inline-block;
     }
+
     h2 { margin: 10px 0 5px; font-size: 22px; color: #2c3e50; }
     p.subtitle { color: #7f8c8d; font-size: 14px; margin-bottom: 25px; }
     
@@ -76,45 +74,29 @@
     @keyframes spin { to { transform: rotate(360deg); } }
     .footer { margin-top: 25px; font-size: 12px; color: #bdc3c7; }
 
-   /* ========== 🔥 修正版：縮小 SweetAlert2 (完美比例) 🔥 ========== */
+    /* ========== SweetAlert2 縮小修正版 ========== */
     
-    /* 1. 彈窗容器設定 */
+    /* 1. 彈窗變小 */
     div.swal2-popup {
-      width: 280px !important;   /* 手機寬度剛好 */
-      padding: 15px !important;  /* 減少內距 */
+      width: 280px !important;
+      padding: 15px !important;
     }
 
-    /* 2. 標題與文字調整 */
-    div.swal2-title {
-      font-size: 1.25rem !important;
-      margin-top: 10px !important;
-    }
-    div.swal2-html-container {
-      font-size: 0.9rem !important;
-      margin: 5px 0 15px !important;
-    }
+    /* 2. 字體縮小 */
+    div.swal2-title { font-size: 1.3rem !important; margin-top: 10px !important; }
+    div.swal2-html-container { font-size: 0.9rem !important; margin: 5px 0 15px !important; }
 
-    /* 3.【關鍵】圖示縮小術 */
-    /* 使用 transform: scale() 可以完美縮小圖示，不會讓勾勾歪掉 */
+    /* 3. 圖示縮小 (使用 font-size 控制最完美) */
     div.swal2-icon {
-      transform: scale(1); /* 縮小到 60% */
-      margin-top: 5px !important;    /* 調整上方間距 */
-      margin-bottom: -10px !important; /* 因為縮小了，把下方內容拉近一點 */
-    }
-    
-    /* 移除所有對內部線條的手動修正，讓它恢復原廠設定的完美位置 */
-    div.swal2-icon .swal2-success-line-tip,
-    div.swal2-icon .swal2-success-line-long, 
-    div.swal2-icon .swal2-success-ring {
-      top: auto !important;
-      width: auto !important;
-      height: auto !important;
+      font-size: 10px !important; /* 調這個數字就能控制圖示大小 */
+      width: 5em !important; 
+      height: 5em !important;
+      margin-top: 10px !important;
+      margin-bottom: 5px !important;
     }
 
     /* 4. 按鈕微調 */
-    div.swal2-actions {
-      margin-top: 5px !important;
-    }
+    div.swal2-actions { margin-top: 5px !important; }
     button.swal2-confirm {
       font-size: 14px !important;
       padding: 8px 25px !important;
