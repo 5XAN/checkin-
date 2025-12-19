@@ -1,150 +1,290 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-Hant">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>打卡系統</title>
-<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-<style>
-  body { font-family: system-ui, -apple-system, Segoe UI, Roboto; margin: 0; padding: 24px; background-color: #f8f9fa; }
-  .wrap { max-width: 420px; margin: 0 auto; text-align: center; background: white; padding: 24px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-  h2 { margin-top: 0; color: #333; }
-  p { color: #666; font-size: 14px; margin-bottom: 24px; }
-  
-  /* 按鈕容器：讓按鈕並排 */
-  .btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  
-  button { width: 100%; font-size: 16px; padding: 14px 0; border: 0; border-radius: 12px; cursor: pointer; transition: opacity 0.2s; font-weight: bold; color: #fff; }
-  button:active { opacity: 0.8; }
-  button:disabled { background: #ccc !important; cursor: not-allowed; }
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>志工打卡系統</title>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
 
-  /* 不同顏色的按鈕 */
-  .btn-in { background: #06C755; } /* LINE 綠 */
-  .btn-out { background: #ff9800; } /* 橘色 */
-
-  .msg { margin-top: 20px; line-height: 1.6; font-size: 15px; min-height: 24px; }
-</style>
-
-<div class="wrap">
-  <h2>打卡</h2>
-  <p>請選擇打卡類型，系統將自動擷取定位。</p>
-  
-  <div class="btn-group">
-    <button id="btnIn" class="btn-in">志工簽到</button>
-    <button id="btnOut" class="btn-out">志工簽退</button>
-  </div>
-  
-  <div id="msg" class="msg"></div>
-</div>
-
-<script>
-// 設定區
-const LIFF_ID = "2008226975-vWnrprZr";
-const WEBHOOK = "https://andywu86627.app.n8n.cloud/webhook/cb884b1c-d8a2-4fd6-bb32-ce3e1278b99c";
-
-const $ = s => document.querySelector(s);
-const say = t => $("#msg").innerText = t;
-
-// 控制按鈕鎖定狀態
-const toggleBtns = (disabled) => {
-  $("#btnIn").disabled = disabled;
-  $("#btnOut").disabled = disabled;
-};
-
-async function run(type) {
-  // 1. 鎖定按鈕並顯示訊息
-  toggleBtns(true);
-  const typeText = type === 'CLOCK_IN' ? '簽到' : '簽退';
-  say(`準備進行${typeText}打卡...`);
-
-  try {
-    // 2. LIFF 初始化與登入檢查
-    await liff.init({ liffId: LIFF_ID });
-    if (!liff.isLoggedIn()) { 
-      liff.login(); 
-      return; 
+  <style>
+    :root {
+      --primary-color: #4A90E2;
+      --success-color: #2ecc71;
+      --warning-color: #f39c12;
+      --bg-color: #f4f7f6;
     }
-    const profile = await liff.getProfile();
 
-    // 3. 獲取定位
-    say("定位中...");
-    navigator.geolocation.getCurrentPosition(async pos => {
-      say(`定位成功，資料上傳中 (${typeText})...`);
-      
-      // 4. 準備傳送資料
-      const payload = {
-        userId: profile.userId,
-        displayName: profile.displayName,
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-        ts: new Date().toISOString(),
-        type: type 
-      };
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      background: var(--bg-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      color: #333;
+    }
+
+    .card {
+      background: white;
+      width: 90%;
+      max-width: 400px;
+      padding: 30px 20px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      text-align: center;
+      transition: transform 0.3s;
+    }
+
+    .header-icon {
+      font-size: 48px;
+      color: var(--primary-color);
+      margin-bottom: 15px;
+      background: #eef5ff;
+      width: 80px;
+      height: 80px;
+      line-height: 80px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    h2 {
+      margin: 10px 0 5px;
+      font-size: 22px;
+      color: #2c3e50;
+    }
+
+    p.subtitle {
+      color: #7f8c8d;
+      font-size: 14px;
+      margin-bottom: 30px;
+    }
+
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .btn {
+      position: relative;
+      border: none;
+      padding: 15px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.2s;
+      color: white;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled {
+      background: #bdc3c7 !important;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn-in {
+      background: linear-gradient(135deg, #2ecc71, #27ae60);
+    }
+
+    .btn-out {
+      background: linear-gradient(135deg, #f39c12, #e67e22);
+    }
+    
+    /* 載入動畫 */
+    .spinner {
+      display: none;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .footer {
+      margin-top: 25px;
+      font-size: 12px;
+      color: #bdc3c7;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="header-icon">
+      <i class="fa-solid fa-location-dot"></i>
+    </div>
+    <h2>志工打卡系統</h2>
+    <p class="subtitle">請選擇您的打卡項目，系統將自動定位</p>
+
+    <div class="btn-group">
+      <button id="btnIn" class="btn btn-in" onclick="run('CLOCK_IN')">
+        <i class="fa-solid fa-right-to-bracket"></i>
+        <span>志工簽到</span>
+        <div class="spinner"></div>
+      </button>
+
+      <button id="btnOut" class="btn btn-out" onclick="run('CLOCK_OUT')">
+        <i class="fa-solid fa-right-from-bracket"></i>
+        <span>志工簽退</span>
+        <div class="spinner"></div>
+      </button>
+    </div>
+
+    <div class="footer">
+      Powered by LIFF & n8n
+    </div>
+  </div>
+
+  <script>
+    // ================= 設定區 =================
+    const LIFF_ID = "2008226975-vWnrprZr"; // 請換成你的 LIFF ID
+    const WEBHOOK = "https://andywu86627.app.n8n.cloud/webhook/cb884b1c-d8a2-4fd6-bb32-ce3e1278b99c"; // 請換成你的 Webhook
+    // =========================================
+
+    // 初始化 LIFF
+    document.addEventListener("DOMContentLoaded", function() {
+      liff.init({ liffId: LIFF_ID }).then(() => {
+        if (!liff.isLoggedIn()) {
+          liff.login();
+        }
+      }).catch(err => {
+        console.error('LIFF Init Error', err);
+        Swal.fire('錯誤', 'LIFF 初始化失敗，請檢查 ID', 'error');
+      });
+    });
+
+    // 按鈕鎖定與動畫控制
+    const toggleLoading = (btnId, isLoading) => {
+      const btn = document.getElementById(btnId);
+      const spinner = btn.querySelector('.spinner');
+      const icon = btn.querySelector('i');
+      const text = btn.querySelector('span');
+      const allBtns = document.querySelectorAll('.btn');
+
+      if (isLoading) {
+        allBtns.forEach(b => b.disabled = true); // 鎖定所有按鈕
+        spinner.style.display = 'block';
+        icon.style.display = 'none';
+        text.innerText = '處理中...';
+      } else {
+        allBtns.forEach(b => b.disabled = false); // 解鎖
+        spinner.style.display = 'none';
+        icon.style.display = 'inline-block';
+        text.innerText = btnId === 'btnIn' ? '志工簽到' : '志工簽退';
+      }
+    };
+
+    async function run(type) {
+      const btnId = type === 'CLOCK_IN' ? 'btnIn' : 'btnOut';
+      const typeText = type === 'CLOCK_IN' ? '簽到' : '簽退';
+
+      // 1. 開始 Loading
+      toggleLoading(btnId, true);
 
       try {
-        // 5. 發送至 n8n Webhook
-        const r = await fetch(WEBHOOK, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
-        
-        // ⚠️ 這裡要配合 n8n 回傳的格式，假設 n8n 回傳 { status: "success", msg: "..." }
-        const data = await r.json();
-        
-        // --- 🔥 關鍵修改開始 🔥 ---
-        if (data.status === 'success' || data.ok === true) {
-          say(`✅ ${typeText}成功！正在發送通知...`);
+        // 2. 獲取定位
+        navigator.geolocation.getCurrentPosition(async pos => {
+          
+          const profile = await liff.getProfile();
+          const payload = {
+            userId: profile.userId,
+            displayName: profile.displayName,
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            ts: new Date().toISOString(),
+            type: type
+          };
 
-          // 使用 liff.sendMessages 幫使用者在聊天室發話
-          // 這樣就像是機器人回覆一樣，但是免費的！
-          liff.sendMessages([
-            {
-              type: 'text',
-              text: data.msg || `${typeText}成功！` // 優先顯示 n8n 算好的詳細內容
+          // 3. 發送給 n8n
+          try {
+            const response = await fetch(WEBHOOK, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            // 4. 判斷 n8n 回傳結果
+            if (data.status === 'success' || data.ok === true) {
+              
+              // 嘗試發送 LINE 聊天室訊息
+              // 即使這裡失敗，也應該算打卡成功 (因為資料已經進 Google Sheets)
+              let notifyMsg = "";
+              try {
+                if (liff.isInClient()) {
+                  await liff.sendMessages([{
+                    type: 'text',
+                    text: data.msg || `${typeText}完成！`
+                  }]);
+                } else {
+                  notifyMsg = "(請注意：外部瀏覽器無法發送聊天通知)";
+                }
+              } catch (msgErr) {
+                console.warn("發送訊息失敗，可能是權限問題", msgErr);
+                notifyMsg = "(訊息發送失敗，但打卡紀錄已保存)";
+              }
+
+              // 顯示漂亮成功彈窗
+              await Swal.fire({
+                icon: 'success',
+                title: `${typeText}成功`,
+                text: `${data.msg || ''} ${notifyMsg}`,
+                confirmButtonColor: '#2ecc71',
+                confirmButtonText: '關閉視窗'
+              });
+
+              liff.closeWindow();
+
+            } else {
+              // 打卡失敗 (例如距離太遠)
+              Swal.fire({
+                icon: 'error',
+                title: '打卡失敗',
+                text: data.msg || '未知錯誤',
+                confirmButtonColor: '#e74c3c'
+              });
             }
-          ])
-          .then(() => {
-            console.log("Message sent");
-            liff.closeWindow(); // 發送完後關閉視窗
-          })
-          .catch((err) => {
-            console.error("發送訊息失敗:", err);
-            // 萬一使用者封鎖機器人或發生錯誤，至少畫面上顯示成功
-            say(`✅ ${typeText}成功！(但訊息發送失敗)`);
-            setTimeout(() => liff.closeWindow(), 3000);
-          });
 
-        } else {
-          // 打卡失敗 (例如距離太遠)
-          // 這裡也可以選擇要不要發送失敗訊息到聊天室，通常失敗僅顯示在畫面即可
-          say(`❌ ${data.msg || '打卡失敗'}`);
-          toggleBtns(false); 
-        }
-        // --- 🔥 關鍵修改結束 🔥 ---
+          } catch (fetchErr) {
+            console.error(fetchErr);
+            Swal.fire('伺服器錯誤', '無法連接到打卡伺服器', 'error');
+          } finally {
+            toggleLoading(btnId, false);
+          }
 
-      } catch (e) {
-        console.error(e);
-        say("⚠️ 伺服器連線錯誤");
-        toggleBtns(false);
+        }, (geoErr) => {
+          console.error(geoErr);
+          Swal.fire('定位失敗', '請確認您已授權 GPS 定位功能', 'warning');
+          toggleLoading(btnId, false);
+        }, { enableHighAccuracy: true, timeout: 10000 });
+
+      } catch (err) {
+        console.error(err);
+        Swal.fire('錯誤', '發生未預期的錯誤', 'error');
+        toggleLoading(btnId, false);
       }
-    }, err => {
-      console.error(err);
-      say("❌ 無法取得定位，請確認權限");
-      toggleBtns(false);
-    }, { enableHighAccuracy: true, timeout: 12000 });
-
-  } catch (err) {
-    console.error(err);
-    say("⚠️ 初始化失敗");
-    toggleBtns(false);
-  }
-}
-
-// 綁定點擊事件
-$("#btnIn").onclick = () => run('CLOCK_IN');
-$("#btnOut").onclick = () => run('CLOCK_OUT');
-
-// 綁定點擊事件
-$("#btnIn").onclick = () => run('CLOCK_IN');
-$("#btnOut").onclick = () => run('CLOCK_OUT');
-</script>
+    }
+  </script>
+</body>
 </html>
