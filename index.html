@@ -242,12 +242,11 @@
               liff.closeWindow();
 
             } else {
-              // 打卡失敗 (例如距離太遠)
               Swal.fire({
-                icon: 'error',
-                title: '打卡失敗',
-                text: data.msg || '未知錯誤',
-                confirmButtonColor: '#e74c3c'
+              icon: 'error', // 這裡會自動變紅色叉叉
+              title: '打卡失敗',
+              html: (data.msg || '未知錯誤').replace(/\n/g, '<br>'),
+              confirmButtonColor: '#e74c3c'
               });
             }
 
