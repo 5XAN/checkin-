@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>志工打卡系統</title>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -17,26 +17,32 @@
       --bg-color: #f4f7f6;
     }
 
+    /* 關鍵修正 1: 允許頁面捲動，並確保背景填滿 */
     body {
       font-family: 'Noto Sans TC', sans-serif;
       background: var(--bg-color);
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start; /* 讓內容從頂部開始，防止大字體時頭部消失 */
       min-height: 100vh;
       margin: 0;
       color: #333;
-      overflow: hidden; 
+      overflow-y: auto; /* 允許垂直捲動 */
+      -webkit-overflow-scrolling: touch;
     }
 
+    /* 關鍵修正 2: 增加上下邊距，防止大字體貼邊 */
     .card {
       background: white;
-      width: 85%;
-      max-width: 360px;
-      padding: 25px 20px;
+      width: 90%;
+      max-width: 380px;
+      margin: 30px 15px; 
+      padding: 30px 20px;
       border-radius: 20px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.05);
       text-align: center;
+      box-sizing: border-box;
+      flex-shrink: 0;
     }
 
     .header-icon {
@@ -44,64 +50,74 @@
       color: var(--primary-color);
       margin-bottom: 15px;
       background: #eef5ff;
-      width: 80px;
-      height: 80px;
-      line-height: 80px;
+      width: 85px;
+      height: 85px;
+      line-height: 85px;
       border-radius: 50%;
       display: inline-block;
     }
 
-    h2 { margin: 10px 0 5px; font-size: 22px; color: #2c3e50; }
-    p.subtitle { color: #7f8c8d; font-size: 14px; margin-bottom: 25px; }
-    
-    .btn-group { display: flex; flex-direction: column; gap: 15px; }
-
-    .btn {
-      position: relative; border: none; padding: 15px; border-radius: 12px;
-      font-size: 16px; font-weight: 700; cursor: pointer; display: flex;
-      align-items: center; justify-content: center; gap: 10px;
-      transition: all 0.2s; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    h2 { 
+      margin: 10px 0 8px; 
+      font-size: 1.6rem; /* 使用 rem 單位適應縮放 */
+      color: #2c3e50; 
+      line-height: 1.3;
     }
-    .btn:active { transform: scale(0.98); }
+
+    p.subtitle { 
+      color: #7f8c8d; 
+      font-size: 1rem; 
+      margin-bottom: 30px; 
+      line-height: 1.4;
+    }
+    
+    .btn-group { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 20px; 
+    }
+
+    /* 關鍵修正 3: 增加按鈕高度與字體大小，適合長輩點擊 */
+    .btn {
+      position: relative; 
+      border: none; 
+      padding: 18px 15px; 
+      border-radius: 15px;
+      font-size: 1.2rem; 
+      font-weight: 700; 
+      cursor: pointer; 
+      display: flex;
+      align-items: center; 
+      justify-content: center; 
+      gap: 12px;
+      transition: all 0.2s; 
+      color: white; 
+      box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+      min-height: 64px; /* 強制最小高度 */
+    }
+
+    .btn:active { transform: scale(0.96); }
     .btn:disabled { background: #bdc3c7 !important; cursor: not-allowed; box-shadow: none; }
     .btn-in { background: linear-gradient(135deg, #2ecc71, #27ae60); }
     .btn-out { background: linear-gradient(135deg, #f39c12, #e67e22); }
     
     .spinner {
-      display: none; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3);
+      display: none; width: 24px; height: 24px; border: 3px solid rgba(255,255,255,0.3);
       border-radius: 50%; border-top-color: white; animation: spin 1s ease-in-out infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    .footer { margin-top: 25px; font-size: 12px; color: #bdc3c7; }
 
-    /* ========== SweetAlert2 縮小修正版 ========== */
-    
-    /* 1. 彈窗變小 */
+    .footer { margin-top: 30px; font-size: 14px; color: #bdc3c7; }
+
+    /* ========== SweetAlert2 長輩友善調整 ========== */
     div.swal2-popup {
-      width: 280px !important;
+      width: 300px !important;
       padding: 15px !important;
+      border-radius: 15px !important;
     }
-
-    /* 2. 字體縮小 */
-    div.swal2-title { font-size: 1.3rem !important; margin-top: 10px !important; }
-    div.swal2-html-container { font-size: 0.9rem !important; margin: 5px 0 15px !important; }
-
-    /* 3. 圖示縮小 (使用 font-size 控制最完美) */
-    div.swal2-icon {
-      font-size: 10px !important; /* 調這個數字就能控制圖示大小 */
-      width: 5em !important; 
-      height: 5em !important;
-      margin-top: 10px !important;
-      margin-bottom: 5px !important;
-    }
-
-    /* 4. 按鈕微調 */
-    div.swal2-actions { margin-top: 5px !important; }
-    button.swal2-confirm {
-      font-size: 14px !important;
-      padding: 8px 25px !important;
-      border-radius: 8px !important;
-    }
+    div.swal2-title { font-size: 1.4rem !important; }
+    div.swal2-html-container { font-size: 1.1rem !important; }
+    button.swal2-confirm { font-size: 1rem !important; padding: 10px 30px !important; }
   </style>
 </head>
 <body>
@@ -111,7 +127,7 @@
       <i class="fa-solid fa-location-dot"></i>
     </div>
     <h2>志工打卡系統</h2>
-    <p class="subtitle">請選擇您的打卡項目，系統將自動定位</p>
+    <p class="subtitle">請按下方的按鈕進行簽到或簽退</p>
 
     <div class="btn-group">
       <button id="btnIn" class="btn btn-in" onclick="run('CLOCK_IN')">
@@ -128,6 +144,7 @@
     </div>
 
     <div class="footer">
+      系統維護：包富良食<br>
       Powered by LIFF & n8n
     </div>
   </div>
@@ -146,11 +163,11 @@
         }
       }).catch(err => {
         console.error('LIFF Init Error', err);
-        Swal.fire('錯誤', 'LIFF 初始化失敗，請檢查 ID', 'error');
+        Swal.fire('系統錯誤', '請關閉後重新開啟', 'error');
       });
     });
 
-    // 按鈕鎖定與動畫控制
+    // 動畫控制
     const toggleLoading = (btnId, isLoading) => {
       const btn = document.getElementById(btnId);
       const spinner = btn.querySelector('.spinner');
@@ -159,12 +176,12 @@
       const allBtns = document.querySelectorAll('.btn');
 
       if (isLoading) {
-        allBtns.forEach(b => b.disabled = true); // 鎖定所有按鈕
+        allBtns.forEach(b => b.disabled = true);
         spinner.style.display = 'block';
         icon.style.display = 'none';
         text.innerText = '處理中...';
       } else {
-        allBtns.forEach(b => b.disabled = false); // 解鎖
+        allBtns.forEach(b => b.disabled = false);
         spinner.style.display = 'none';
         icon.style.display = 'inline-block';
         text.innerText = btnId === 'btnIn' ? '志工簽到' : '志工簽退';
@@ -173,15 +190,12 @@
 
     async function run(type) {
       const btnId = type === 'CLOCK_IN' ? 'btnIn' : 'btnOut';
-      const typeText = type === 'CLOCK_IN' ? '簽到' : '簽退';
-
-      // 1. 開始 Loading
+      
       toggleLoading(btnId, true);
 
-      try {
-        // 2. 獲取定位
-        navigator.geolocation.getCurrentPosition(async pos => {
-          
+      // 檢查 GPS 權限與獲取定位
+      navigator.geolocation.getCurrentPosition(async pos => {
+        try {
           const profile = await liff.getProfile();
           const payload = {
             userId: profile.userId,
@@ -192,82 +206,59 @@
             type: type
           };
 
-          // 3. 發送給 n8n
-          try {
-            const response = await fetch(WEBHOOK, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload)
-            });
+          const response = await fetch(WEBHOOK, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
 
-            const data = await response.json();
+          const data = await response.json();
 
-            // 4. 判斷 n8n 回傳結果
-            if (data.status === 'success' || data.ok === true) {
-              
-              // 根據回傳的 type 決定彈窗顏色和圖示 (後端回傳 type: CLOCK_IN 或 CLOCK_OUT)
-              // 如果後端沒回傳，就用前端原本的 type 變數
-              const actionType = data.type || type; 
-              const isCheckIn = actionType === 'CLOCK_IN';
-              
-              // 設定彈窗樣式
-              const titleText = isCheckIn ? '簽到成功！' : '簽退成功！';
-              const popupIcon = isCheckIn ? 'success' : 'success'; // 也可以換成 'info'
-              const confirmColor = isCheckIn ? '#2ecc71' : '#f39c12'; // 綠色 vs 橘色
+          if (data.status === 'success' || data.ok === true) {
+            const isCheckIn = (data.type || type) === 'CLOCK_IN';
+            const titleText = isCheckIn ? '簽到成功！' : '簽退成功！';
+            const confirmColor = isCheckIn ? '#2ecc71' : '#f39c12';
 
-              // 嘗試發送 LINE 聊天室訊息
-              let notifyMsg = "";
+            // 嘗試在 LINE 傳送文字訊息
+            if (liff.isInClient()) {
               try {
-                if (liff.isInClient()) {
-                  await liff.sendMessages([{
-                    type: 'text',
-                    text: data.msg || `${titleText}`
-                  }]);
-                }
-              } catch (msgErr) {
-                console.warn("發送訊息失敗", msgErr);
-              }
-
-              // 顯示差異化的漂亮彈窗
-              await Swal.fire({
-                icon: popupIcon,
-                title: titleText,
-                // 直接顯示 n8n 傳回來的客製化 msg (早安 vs 辛苦了)
-                // 這裡用 replace 把換行符號 \n 轉成 HTML 的 <br> 讓排版更漂亮
-                html: (data.msg || '').replace(/\n/g, '<br>'), 
-                confirmButtonColor: confirmColor,
-                confirmButtonText: '關閉'
-              });
-
-              liff.closeWindow();
-
-            } else {
-              Swal.fire({
-              icon: 'error', // 這裡會自動變紅色叉叉
-              title: '打卡失敗',
-              html: (data.msg || '未知錯誤').replace(/\n/g, '<br>'),
-              confirmButtonColor: '#e74c3c'
-              });
+                await liff.sendMessages([{
+                  type: 'text',
+                  text: data.msg || titleText
+                }]);
+              } catch (e) { console.log("訊息發送受阻"); }
             }
 
-          } catch (fetchErr) {
-            console.error(fetchErr);
-            Swal.fire('伺服器錯誤', '無法連接到打卡伺服器', 'error');
-          } finally {
-            toggleLoading(btnId, false);
+            await Swal.fire({
+              icon: 'success',
+              title: titleText,
+              html: (data.msg || '操作已完成').replace(/\n/g, '<br>'), 
+              confirmButtonColor: confirmColor,
+              confirmButtonText: '好了'
+            });
+
+            liff.closeWindow();
+
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: '打卡失敗',
+              html: (data.msg || '請洽管理員').replace(/\n/g, '<br>'),
+              confirmButtonColor: '#e74c3c'
+            });
           }
-
-        }, (geoErr) => {
-          console.error(geoErr);
-          Swal.fire('定位失敗', '請確認您已授權 GPS 定位功能', 'warning');
+        } catch (err) {
+          Swal.fire('連線錯誤', '請檢查網路狀態', 'error');
+        } finally {
           toggleLoading(btnId, false);
-        }, { enableHighAccuracy: true, timeout: 10000 });
+        }
 
-      } catch (err) {
-        console.error(err);
-        Swal.fire('錯誤', '發生未預期的錯誤', 'error');
+      }, (geoErr) => {
+        let errorMsg = '請開啟手機的 GPS 定位功能';
+        if (geoErr.code === 1) errorMsg = '請允許瀏覽器使用定位權限';
+        Swal.fire('定位失敗', errorMsg, 'warning');
         toggleLoading(btnId, false);
-      }
+      }, { enableHighAccuracy: true, timeout: 10000 });
     }
   </script>
 </body>
